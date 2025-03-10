@@ -1,0 +1,81 @@
+#!/bin/sh
+
+set -e
+
+_systemctl() {
+    if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]; then
+        systemctl "$@"
+    fi
+}
+
+_update_catalog() {
+    journalctl ${DPKG_ROOT:+--root="$DPKG_ROOT"} --update-catalog || true
+}
+
+_update_binfmt() {
+    _systemctl try-restart systemd-binfmt.service || true
+}
+
+# Update Message Catalogs database and binfmt registrations in response to dpkg triggers
+if [ "$1" = "triggered" ]; then
+    shift
+    for trigger in $@; do
+        case $trigger in
+            /usr/lib/systemd/catalog)
+                _update_catalog
+                ;;
+            /usr/lib/binfmt.d)
+                _update_binfmt
+                ;;
+        esac
+    done
+    exit 0
+fi
+
+# Enable getty, remote-fs.target and systemd-pstore by default on new installs
+if [ -z "$2" ]; then
+    systemctl ${DPKG_ROOT:+--root="$DPKG_ROOT"} enable getty@tty1.service || true
+    systemctl ${DPKG_ROOT:+--root="$DPKG_ROOT"} enable remote-fs.target || true
+    systemctl ${DPKG_ROOT:+--root="$DPKG_ROOT"} enable systemd-pstore.service || true
+fi
+
+# Create /etc/machine-id
+systemd-machine-id-setup ${DPKG_ROOT:+--root="$DPKG_ROOT"}
+
+# Enable persistent journal, in auto-mode, by default on new installs
+if [ -z "$2" ]; then
+    mkdir -p "$DPKG_ROOT/var/log/journal"
+fi
+
+# Initial update of the Message Catalogs database
+_update_catalog
+
+# Move the old locale file into /etc. Symlinks will be created by tmpfiles.d later
+if [ -f /etc/default/locale ] && [ ! -L /etc/default/locale ] && [ ! -f /etc/locale.conf ]; then
+    mv /etc/default/locale /etc/locale.conf
+fi
+
+# Automatically added by dh_installsysusers/13.11.6
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+   systemd-sysusers ${DPKG_ROOT:+--root="$DPKG_ROOT"} basic.conf systemd-journal.conf systemd-network.conf
+fi
+# End automatically added section
+# Automatically added by dh_installtmpfiles/13.11.6
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if [ -x "$(command -v systemd-tmpfiles)" ]; then
+		systemd-tmpfiles ${DPKG_ROOT:+--root="$DPKG_ROOT"} --create credstore.conf debian.conf home.conf journal-nocow.conf legacy.conf provision.conf systemd-network.conf systemd-nologin.conf systemd-pstore.conf systemd-tmp.conf systemd.conf tmp.conf var.conf x11.conf || true
+	fi
+fi
+# End automatically added section
+# Automatically added by dh_installdeb/13.11.6
+dpkg-maintscript-helper rm_conffile /etc/systemd/resolved.conf 251.3-2\~ -- "$@"
+# End automatically added section
+
+
+if [ -n "$2" ]; then
+    _systemctl daemon-reexec || true
+    # do not restart logind
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=919509
+    _systemctl try-restart systemd-networkd.service || true
+    _systemctl try-restart systemd-journald.service || true
+fi

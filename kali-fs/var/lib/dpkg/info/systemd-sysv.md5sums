@@ -1,0 +1,8 @@
+5914070f6b433494b9cfef9a2565dc43  usr/share/doc/systemd-sysv/NEWS.Debian.gz
+e45fc2f331ad9fbc2e564018332500ea  usr/share/doc/systemd-sysv/changelog.Debian.gz
+b16a86fb841b001b52a5c5caccf526c2  usr/share/doc/systemd-sysv/copyright
+fd20971494f62e8612c9308588121010  usr/share/man/man1/init.1.gz
+e23070ca83c54714a2f9d46d0c326ca9  usr/share/man/man8/poweroff.8.gz
+230f5397ade06009f46a98d296d6f8ff  usr/share/man/man8/runlevel.8.gz
+b57c10cabbfd329669fe4ed27ff313c1  usr/share/man/man8/shutdown.8.gz
+21745d16971bcc91215ad500370c5c89  usr/share/man/man8/telinit.8.gz

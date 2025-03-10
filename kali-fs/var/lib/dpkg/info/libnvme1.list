@@ -1,0 +1,13 @@
+/.
+/usr
+/usr/lib
+/usr/lib/aarch64-linux-gnu
+/usr/lib/aarch64-linux-gnu/libnvme-mi.so.1.6.0
+/usr/lib/aarch64-linux-gnu/libnvme.so.1.6.0
+/usr/share
+/usr/share/doc
+/usr/share/doc/libnvme1
+/usr/share/doc/libnvme1/changelog.Debian.gz
+/usr/share/doc/libnvme1/copyright
+/usr/lib/aarch64-linux-gnu/libnvme-mi.so.1
+/usr/lib/aarch64-linux-gnu/libnvme.so.1
